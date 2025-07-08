@@ -15,33 +15,40 @@
 #################################################################
 
 # Source Image
-FROM biocontainers/biocontainers:latest
+FROM ubuntu:22.04
 
 ################## BEGIN INSTALLATION ###########################
 USER root
 
 # install
 RUN apt-get update && apt-get install -y software-properties-common \
-&& apt-get update && apt-get install -y \
-    gcc-4.9 \
-    g++-4.9 \
-    coinor-cbc \
-    zlib1g-dev \
-    libbz2-dev \
-&& update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.9 \
-&& rm -rf /var/lib/apt/lists/* \
-&& apt-get clean \
-&& apt-get purge
+    && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
+    && apt-get update && apt-get install -y \
+        gcc-11 \
+        g++-11 \
+        build-essential \
+        coinor-cbc \
+        zlib1g-dev \
+        libbz2-dev \
+        curl \
+        python3-pip \
+        git \
+        cmake \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
 
 #HLA Typing
 #OptiType dependecies
 RUN curl -O https://support.hdfgroup.org/ftp/HDF5/current18/bin/hdf5-1.8.21-Std-centos7-x86_64-shared_64.tar.gz \
     && tar -xvf hdf5-1.8.21-Std-centos7-x86_64-shared_64.tar.gz \
-    && mv hdf5-1.8.21-Std-centos7-x86_64-shared_64/bin/* /usr/local/bin/ \
-    && mv hdf5-1.8.21-Std-centos7-x86_64-shared_64/lib/* /usr/local/lib/ \
-    && mv hdf5-1.8.21-Std-centos7-x86_64-shared_64/include/* /usr/local/include/ \
-    && mv hdf5-1.8.21-Std-centos7-x86_64-shared_64/share/* /usr/local/share/ \
-    && rm -rf hdf5-1.8.21-Std-centos7-x86_64-shared_64/ \
+    && mv hdf5/bin/* /usr/local/bin/ \
+    && mv hdf5/lib/* /usr/local/lib/ \
+    && mv hdf5/include/* /usr/local/include/ \
+    && mv hdf5/share/* /usr/local/share/ \
+    && rm -rf hdf5/ \
     && rm -f hdf5-1.8.21-Std-centos7-x86_64-shared_64.tar.gz
 
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
@@ -58,10 +65,12 @@ RUN pip install --upgrade pip && pip install \
     
 #installing optitype form git repository (version Dec 09 2015) and wirtig config.ini
 RUN git clone https://github.com/lrenders/OptiType-Columba.git \
+    && cd OptiType-Columba \
     && git checkout columba-boost \
-    && sed -i -e '1i#!/usr/bin/env python\' OptiType/OptiTypePipeline.py \
-    && mv OptiType/ /usr/local/bin/ \
-    && chmod 777 /usr/local/bin/OptiType/OptiTypePipeline.py \
+    && cd .. \
+    && sed -i -e '1i#!/usr/bin/env python\' OptiType-Columba/OptiTypePipeline.py \
+    && mv OptiType-Columba/ /usr/local/bin/ \
+    && chmod 777 /usr/local/bin/OptiType-Columba/OptiTypePipeline.py \
     && echo "[mapping]\n\
 columba=/usr/local/bin/columba \n\
 threads=1 \n\
@@ -73,20 +82,21 @@ threads=1 \n\
 [behavior]\n\
 deletebam=true \n\
 unpaired_weight=0 \n\
-use_discordant=false\n" >> /usr/local/bin/OptiType/config.ini
+use_discordant=false\n" >> /usr/local/bin/OptiType-Columba/config.ini
 
 
 
 # install Columba
 RUN git clone https://github.com/biointec/columba.git columba-src \
     && cd columba-src \
+    && git checkout v2.0.2 \
     && bash build_script.sh Vanilla \
     && mv build_Vanilla/columba /usr/local/bin/ \
     && cd .. \
     && rm -rf columba-src
 
 
-ENV PATH=/usr/local/bin/OptiType:$PATH
+ENV PATH=/usr/local/bin/OptiType-Columba:$PATH
 
 # Change user to back to biodocker
 USER biodocker
