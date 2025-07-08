@@ -80,7 +80,7 @@ use_discordant=false\n" >> /usr/local/bin/OptiType/config.ini
 # install Columba
 RUN git clone https://github.com/biointec/columba.git columba-src \
     && cd columba-src \
-    && bash build_script.sh Vanilla
+    && bash build_script.sh Vanilla \
     && mv build_Vanilla/columba /usr/local/bin/ \
     && cd .. \
     && rm -rf columba-src
