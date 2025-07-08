@@ -2,12 +2,12 @@
 # Dockerfile
 #
 # Version:          1.0
-# Software:         OptiType
+# Software:         OptiType-Columba
 # Software Version: 1.3
-# Description:      Accurate NGS-based 4-digit HLA typing
-# Website:          https://github.com/FRED-2/OptiType/
+# Description:      Accurate NGS-based 4-digit HLA typing boosted by Columba
+# Website:          https://github.com/lrenders/OptiType-Columba
 # Tags:             Genomics
-# Provides:         OptiType 1.3
+# Provides:         OptiType-Columba 1.0
 # Base Image:       biodckr/biodocker
 # Build Cmd:        docker build --rm -t fred2/opitype .
 # Pull Cmd:         docker pull fred2/optitype
@@ -62,7 +62,7 @@ RUN git clone https://github.com/FRED-2/OptiType.git \
     && mv OptiType/ /usr/local/bin/ \
     && chmod 777 /usr/local/bin/OptiType/OptiTypePipeline.py \
     && echo "[mapping]\n\
-razers3=/usr/local/bin/razers3 \n\
+columba=/usr/local/bin/columba \n\
 threads=1 \n\
 \n\
 [ilp]\n\
@@ -74,14 +74,16 @@ deletebam=true \n\
 unpaired_weight=0 \n\
 use_discordant=false\n" >> /usr/local/bin/OptiType/config.ini
 
-#installing razers3
-RUN git clone https://github.com/seqan/seqan.git seqan-src \
-    && cd seqan-src \
-    && cmake -DCMAKE_BUILD_TYPE=Release \
-    && make razers3 \
-    && cp bin/razers3 /usr/local/bin \
+
+
+# install Columba
+RUN git clone https://github.com/biointec/columba.git columba-src \
+    && cd columba-src \
+    && bash build_script.sh Vanilla
+    && mv build_Vanilla/columba /usr/local/bin/ \
     && cd .. \
-    && rm -rf seqan-src
+    && rm -rf columba-src
+
 
 ENV PATH=/usr/local/bin/OptiType:$PATH
 

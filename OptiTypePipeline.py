@@ -3,14 +3,15 @@
 """
 ###################################################################
 
-OptiType: precision HLA typing from next-generation sequencing data
+OptiType-Columba: precision HLA typing from next-generation 
+sequencing data boosted by Columba
 
 ###################################################################
 
-Authors: András Szolek, Benjamin Schubert, Christopher Mohr
-Date: August 2017
-Version: 1.3.1
-License: OptiType is released under a three-clause BSD license
+Authors: András Szolek, Benjamin Schubert, Christopher Mohr, Luca Renders
+Date: July 2025
+Version: 1.0.0
+License: OptiType-Columba is released under a three-clause BSD license
 
 
 Introduction:
@@ -18,6 +19,8 @@ Introduction:
 OptiType, is a novel HLA genotyping algorithm based on integer linear
 programming, capable of producing accurate 4-digit HLA genotyping predictions
 from NGS data by simultaneously selecting all minor and major HLA-I alleles.
+The OptiType-Columba version is a fork of the original OptiType boosted by
+Columba, a tool for fast and accurate mapping of NGS reads to a reference/
 
 
 Requirements:
@@ -29,7 +32,7 @@ OptiType uses the following software and libraries:
 4) Matplotlib 1.3.1
 5) Pandas 0.12 (with HDF5 support)
 6) HDF5 1.8.11
-7) RazerS 3.1
+7) Columba 2.0.2
 8) Cplex 12.5
 
 Please make sure you have installed said software/libraries
@@ -39,7 +42,7 @@ and their dependencies.
 Installation:
 -------------
 First install all required software and libraries and register the static path
-in the configuration file for RazerS 3.1. CPLEX should be globally executable
+in the configuration file for Columba 2.0.2. CPLEX should be globally executable
 via command line. Alternative ILP solver supported by Cooper are also usable.
 Please do not change the folder structure or make sure you changed the necessary
 entries in the config file.
@@ -47,34 +50,6 @@ entries in the config file.
 
 Usage:
 -------------
-1) First filter the read files with the following settings:
-
->razers3 --percent-identity 90 --max-hits 1 --distance-range 0
-         --output-format sam --output sample_fished.sam
-         ./data/hla_reference.fasta sample.fastq
-
-where reference.fasta is either nuc_reference.fasta or gen_reference.fasta
-depending on the type of NGS data. The references can be found in the ./data
-sub-folder or in the supplementary material. To use the results as input
-for OptiType the sam-files have to be converted into fastq format. On Unix-
-based operating system you can convert from sam to fastq with the following
-command:
-
->cat sample_fished.sam | grep -v ^@
-	| awk '{print "@"$1"\n"$10"\n+\n"$11}' > sample_fished.fastq
-
-For paired-end data pre-process each file individually.
-
-2) After pre-filtering, OptiType can be called as follows:
-
->python OptiTypePipeline.py -i sample_fished_1.fastq [sample_fished_2.fastq]
-                    (--rna | --dna) [--beta BETA] [--enumerate ENUMERATE]
-                    --o ./out_dir/
-
-This will produce a CSV with the optimal typing and possible sub-optimal
-typings if specified, as well as a coverage plot of the genotype for
-diagnostic purposes and a HTML file containing a summary of the results.
-
 >python OptiTypePipeline.py --help
 usage: OptiType [-h] --input INPUT [INPUT ...] (--rna | --dna) [--beta BETA]
                 [--enumerate ENUMERATE] --outdir OUTDIR [--verbose]
@@ -257,11 +232,11 @@ if __name__ == '__main__':
 
     # Constants
     VERBOSE = ht.VERBOSE = bool(args.verbose)  # set verbosity setting in hlatyper too
-    COMMAND = "-i 97 -m 99999 --distance-range 0 -pa -tc %d -o %s %s %s"
+    COMMAND = "-I 97 -a best -nU -R -t %d  -o %s -r %s -f %s" # 97% identity, best mapping, no unmapped records, inputs are thread count, output file, reference base and reads sample
     ALLELE_HDF = os.path.join(this_dir, 'data/alleles.h5')
     MAPPING_REF = {'gen': os.path.join(this_dir, 'data/hla_reference_dna.fasta'),
                    'nuc': os.path.join(this_dir, 'data/hla_reference_rna.fasta')}
-    MAPPING_CMD = config.get("mapping", "razers3") + " " + COMMAND
+    MAPPING_CMD = config.get("mapping", "columba") + " " + COMMAND
     date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
     if args.prefix == None:
         prefix = date
@@ -273,10 +248,7 @@ if __name__ == '__main__':
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    if PYSAM_AVAILABLE:
-        extension = 'bam'
-    else:
-        extension = 'sam'
+    extension = 'sam' # columba uses .sam output
 
     bam_paths = args.input if bam_input else [os.path.join(out_dir, ("%s_%i.%s" % (prefix, i+1, extension))) for i in range(len(args.input))]
 
@@ -290,14 +262,17 @@ if __name__ == '__main__':
     # mapping fished file to reference
     if not bam_input:
         threads = get_num_threads(config.getint("mapping", "threads"))
+        base_path, _ = os.path.splitext(MAPPING_REF[ref_type])
+
         if VERBOSE:
           print("\nmapping with %s threads..." % threads)
         for (i, sample), outbam in zip(enumerate(args.input), bam_paths):          
             if VERBOSE:
                 print("\n", ht.now(), "Mapping %s to %s reference..." % (os.path.basename(sample), ref_type.upper()))
 
+            
             subprocess.call(MAPPING_CMD % (threads, outbam,
-                                           MAPPING_REF[ref_type], sample), shell=True)
+                                           base_path, sample), shell=True)
 
     # sam-to-hdf5
     table, features = ht.load_hdf(ALLELE_HDF, False, 'table', 'features')
