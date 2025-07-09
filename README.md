@@ -23,7 +23,7 @@ Requirements
 The dependencies for Columba:
 This package requires CMake (3.14 or higher) and a compiler.
 For Unix systems, the recommended compiler is GCC (tested on 8.3.0 and more recent versions).
-For Windows systems we recommend [downloading the Columba executable manually]([url](https://github.com/biointec/columba/releases/download/v2.0/columba.exe)).
+For Windows systems we recommend [downloading the Columba executable manually](https://github.com/biointec/columba/releases/download/v2.0/columba.exe).
 
 Installation 
 -----------------------
