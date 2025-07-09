@@ -5,41 +5,52 @@ OptiType-Columba
 Precision HLA typing from next-generation sequencing data boosted by Columba
 
 Authors Opitype: András Szolek, Benjamin Schubert, Christopher Mohr  
-Authors Columba: Luca Renders, Lore Depuydt, Jan Fostier
+Authors Columba: Luca Renders, Lore Depuydt, Jan Fostier  
 Date: July 2025  
-Version: 1.0
+Version: 1.0  
 License: OptiType-Columba is released under a three-clause BSD license
 
 
 Introduction
 -------------
-OptiType is a novel HLA genotyping algorithm based on integer linear
-programming, capable of producing accurate 4-digit HLA genotyping predictions
-from NGS data by simultaneously selecting all major and minor HLA Class I alleles.
-OP
+OptiType-Columba is the speed-boosted version of the original [OptiType](https://github.com/FRED-2/OptiType). 
+It uses [Columba](https://github.com/biointec/Columba) instead of RazerS3 for lossless alignment, greatly improving runtime.
 
 
 Requirements
 -------------
-Conda or Mamba should be installed. 
+[Conda](https://anaconda.org/anaconda/conda) or [Mamba](https://github.com/mamba-org/mamba) should be installed. 
 The dependencies for Columba:
 This package requires CMake (3.14 or higher) and a compiler.
 For Unix systems, the recommended compiler is GCC (tested on 8.3.0 and more recent versions).
-For Windows systems we recommend downloading the Columba binaries manually.
+For Windows systems we recommend [downloading the Columba executable manually]([url](https://github.com/biointec/columba/releases/download/v2.0/columba.exe)).
 
 Installation 
 -----------------------
 
 After cloning this repository, run bash install_script.sh in your terminal.
 This should install the optitype environment and install the columba binary in this repository.
-
+On Windows it suffices to install the optitype environment by running:
+```bash
+conda env create -f optitype-env.yml
+```
+or 
+```bash
+mamba env create -f optitype-env.yml
+```
 
 
 Usage
 -------------
 
-First activate the environment: conda activate optitype-env
+First activate the environment: 
+```bash
+conda activate optitype-env
+```
+Make sure the Columba executable is present in the same directory as the Optitype script.
+If required, you can update the path to the Columba executable in the config.ini file. 
 
+```
 >python OptiTypePipeline.py --help  
 
 usage: OptiType [-h] --input FQ [FQ] (--rna | --dna) [--beta B]
@@ -84,17 +95,20 @@ those produced during the filtering/fishing step.
 Test examples
 -------------
 DNA data (paired end):
+
 ```
 python OptiTypePipeline.py -i ./test/exome/NA11995_SRR766010_1_fished.fastq ./test/exome/NA11995_SRR766010_2_fished.fastq --dna -v -o ./test/exome/
 ```
 
 RNA data (paired end):
+
 ```
 python OptiTypePipeline.py -i ./test/rna/CRC_81_N_1_fished.fastq ./test/rna/CRC_81_N_2_fished.fastq --rna -v -o ./test/rna/
 ```
 
 Contact
 -------------
+Optitype:  
 András Szolek  
 szolek@informatik.uni-tuebingen.de  
 University of Tübingen, Applied Bioinformatics,  
@@ -102,9 +116,20 @@ Center for Bioinformatics, Quantitative Biology Center,
 and Dept. of Computer Science,  
 Sand 14, 72076 Tübingen, Germany
 
+OptiType-Columba:
+Luca Renders
+luca.renders@ugent.be
+Ghent University-imec
+
 
 Reference
 -------------
+OptiType:  
 Szolek, A, Schubert, B, Mohr, C, Sturm, M, Feldhahn, M, and Kohlbacher, O (2014).
 OptiType: precision HLA typing from next-generation sequencing data
 Bioinformatics, 30(23):3310-6.
+
+OptiType-Columba
+> Renders, L., Depuydt, L., Gagie, T., & Fostier, J. (2025). *Columba: Fast Approximate Pattern Matching with Optimized Search Schemes*. bioRxiv. [https://doi.org/10.1101/2025.03.26.645543](https://doi.org/10.1101/2025.03.26.645543)
+> [PDF](https://www.biorxiv.org/content/early/2025/03/31/2025.03.26.645543.full.pdf)
+
