@@ -4,7 +4,7 @@ OptiType-Columba
 
 Precision HLA typing from next-generation sequencing data boosted by Columba
 
-Authors Opitype: András Szolek, Benjamin Schubert, Christopher Mohr  
+Authors OpiType: András Szolek, Benjamin Schubert, Christopher Mohr  
 Authors Columba: Luca Renders, Lore Depuydt, Jan Fostier  
 Date: July 2025  
 Version: 1.0  
